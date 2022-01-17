@@ -12,8 +12,8 @@ Function ComputeFileHash($filePath){
 }
 
 # Temporary solution to always overwrite
-Function FileExists(){
-    $baselineExists = Test-Path -Path \.baseline.txt
+Function FileExists {
+    $baselineExists = Test-Path -Path .\baseline.txt
     if ($baselineExists){
         # Delete it
         Remove-Item -Path .\baseline.txt
@@ -37,18 +37,19 @@ if ($answer -eq "1") {
     Write-Host "Baseline computed"
 
 }
+
 elseif ($answer -eq "2") {
     # Begin monitoring
     # Load file|hash from baseline and store them in a dictionnary
     $filePathAndHashes = Get-Content -Path .\baseline.txt
+    # Empty dictionary
+    $dictionary = @{}
 
     foreach ($file in $filePathAndHashes) {
         # Split with pipe
         $line = $file.split("|")
 
-        # Empty dictionary
-        $dictionary = @{}
-        $dictionary.Add("line[0]","line[1]")
+        $dictionary.Add($line[0],$line[1])
     }
 
     Write-Host "Monitor launched"
@@ -56,18 +57,17 @@ elseif ($answer -eq "2") {
     while ($true) {
         Start-Sleep -Seconds 1
         # Collect the files
-
         # Create a function later
         $files = Get-ChildItem -Path ".\testFiles"
         foreach ($file in $files){
             # Calculate Hash for this file
-            $hash = ComputeFileHash($file.Fullname)
+            $hash = ComputeFileHash($file.FullName)
 
-            if ($filePathAndHashes[$hash.Path] -eq $null) {
+            if ($dictionary[$hash.Path] -eq $null) {
                 # Then a file has been added, notify the user
                 Write-Host "$($hash.Path) has been added to the folder !" -ForegroundColor Red
             }
-            elseif ($filePathAndHashes[$hash.Path] -eq $hash.hash) {
+            elseif ($dictionary[$hash.Path] -eq $hash.hash) {
                 # If the hash didn't change, then there is no modification, do nothing
             }
             else {
@@ -81,7 +81,7 @@ elseif ($answer -eq "2") {
             $exists = Test-Path -Path $filePath
             if (-Not $exists) {
                 # Then it has been deleted
-                    Write-Host "$($file) has been deleted !" -ForegroundColor Red
+                    Write-Host "$($filePath) has been deleted !" -ForegroundColor Red
             }
         }
     }
